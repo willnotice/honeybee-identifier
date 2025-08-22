@@ -3,7 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Is it a Honeybee? - AI Bee Identifier</title>
+    
+    <!-- Final SEO & Social Media Tags -->
+    <title>Is It a Honeybee? - AI Bee Identifier</title>
+    <meta name="title" content="Is It a Honeybee? - AI Bee Identifier">
+    <meta name="description" content="Don't guess, know for sure. Upload a photo to instantly identify if an insect is a honeybee with our free AI tool before you call a beekeeper.">
+
+    <!-- Favicon - Create a 32x32 favicon.png and add it to your project folder -->
+   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://isitahoneybee.com/">
+    <meta property="og:title" content="Is It a Honeybee? - AI Bee Identifier">
+    <meta property="og:description" content="Instantly identify if an insect is a honeybee with our free AI tool.">
+    <!-- Create a 1200x630 social-preview.png and add it to your project folder -->
+    <meta property="og:image" content="https://isitahoneybee.com/social-preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://isitahoneybee.com/">
+    <meta property="twitter:title" content="Is It a Honeybee? - AI Bee Identifier">
+    <meta property="twitter:description" content="Instantly identify if an insect is a honeybee with our free AI tool.">
+    <!-- The same social-preview.png will be used here -->
+    <meta property="twitter:image" content="https://isitahoneybee.com/social-preview.png">
+
+    <!-- Google Analytics Snippet (Optional) - Paste your code here -->
+
+    <!-- Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -82,7 +109,7 @@
                     <div id="identification-result" class="p-6 bg-gray-50 border rounded-lg">
                         <!-- API response will be inserted here -->
                     </div>
-                    <!-- NEW: Reset button -->
+                    <!-- Reset button -->
                     <div class="text-center mt-6">
                         <button id="reset-button" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">
                             Test Another Image
@@ -93,7 +120,7 @@
         </main>
 
         <footer class="text-center mt-10 text-gray-500 text-sm">
-            <p>&copy; 2024 Bee Identifier. Created for clarity.</p>
+            <p>&copy; 2024 isitahoneybee.com. Created for clarity.</p>
         </footer>
     </div>
 
@@ -109,7 +136,7 @@
         const loader = document.getElementById('loader');
         const resultsContent = document.getElementById('results-content');
         const identificationResult = document.getElementById('identification-result');
-        const resetButton = document.getElementById('reset-button'); // New button
+        const resetButton = document.getElementById('reset-button');
 
         let base64ImageData = "";
 
@@ -130,31 +157,22 @@
             }
         };
 
-        // NEW: Function to reset the UI to its initial state
+        // Function to reset the UI to its initial state
         const resetUI = () => {
-            // Hide preview and results
             previewSection.classList.add('hidden');
             resultsContainer.classList.add('hidden');
-            
-            // Show the upload section
             uploadSection.classList.remove('hidden');
             uploadSection.classList.add('fade-in');
-
-            // Clear the file input and image data
             imageUpload.value = null;
             base64ImageData = "";
             imagePreview.src = "#";
         };
 
-        // Event listeners for file input
+        // Event listeners
         imageUpload.addEventListener('change', (event) => handleFile(event.target.files[0]));
-
-        // Event listeners for drag and drop
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
-
-        // Event listener for the new reset button
         resetButton.addEventListener('click', resetUI);
 
         // Identify button click
