@@ -46,7 +46,7 @@
 
         <!-- Main Content -->
         <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-            <div id="upload-section">
+            <div id="upload-section" class="fade-in">
                 <label for="image-upload" class="block text-xl font-bold text-gray-800 mb-4 text-center">Upload Your Image</label>
                 <div id="drop-zone" class="mt-1 flex justify-center px-6 pt-10 pb-10 border-2 border-gray-300 border-dashed rounded-lg transition-colors duration-300">
                     <div class="space-y-1 text-center">
@@ -82,6 +82,12 @@
                     <div id="identification-result" class="p-6 bg-gray-50 border rounded-lg">
                         <!-- API response will be inserted here -->
                     </div>
+                    <!-- NEW: Reset button -->
+                    <div class="text-center mt-6">
+                        <button id="reset-button" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">
+                            Test Another Image
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -92,6 +98,7 @@
     </div>
 
     <script>
+        // Get all the elements
         const dropZone = document.getElementById('drop-zone');
         const imageUpload = document.getElementById('image-upload');
         const uploadSection = document.getElementById('upload-section');
@@ -102,9 +109,11 @@
         const loader = document.getElementById('loader');
         const resultsContent = document.getElementById('results-content');
         const identificationResult = document.getElementById('identification-result');
+        const resetButton = document.getElementById('reset-button'); // New button
 
         let base64ImageData = "";
 
+        // Function to handle file processing
         const handleFile = (file) => {
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
@@ -121,11 +130,34 @@
             }
         };
 
+        // NEW: Function to reset the UI to its initial state
+        const resetUI = () => {
+            // Hide preview and results
+            previewSection.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            
+            // Show the upload section
+            uploadSection.classList.remove('hidden');
+            uploadSection.classList.add('fade-in');
+
+            // Clear the file input and image data
+            imageUpload.value = null;
+            base64ImageData = "";
+            imagePreview.src = "#";
+        };
+
+        // Event listeners for file input
         imageUpload.addEventListener('change', (event) => handleFile(event.target.files[0]));
+
+        // Event listeners for drag and drop
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
 
+        // Event listener for the new reset button
+        resetButton.addEventListener('click', resetUI);
+
+        // Identify button click
         identifyButton.addEventListener('click', async () => {
             if (!base64ImageData) return;
             resultsContainer.classList.remove('hidden');
@@ -150,8 +182,6 @@
         });
 
         async function callSecureAPI(imageData) {
-            // This function now calls our own secure serverless function.
-            // The path /.netlify/functions/identify corresponds to the file we created.
             const response = await fetch('/.netlify/functions/identify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
