@@ -1,19 +1,25 @@
-// This function uses the stable Gemini 1.5 Flash model to avoid 404 errors
+// This function uses the stable Google AI v1 endpoint to resolve the 404 error.
 export const handler = async (event) => {
+  // Only allow POST requests.
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
     const { imageData } = JSON.parse(event.body);
-    const apiKey = process.env.GEMINI_API_KEY;
+    if (!imageData) {
+      return { statusCode: 400, body: 'Missing image data' };
+    }
 
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('GEMINI_API_KEY is not set.');
       return { statusCode: 500, body: 'API key is not configured.' };
     }
 
-    // UPDATED: Using 'gemini-1.5-flash' which is the stable, standard model name
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // FIX: Switched to the stable 'v1' endpoint and 'gemini-1.5-flash' model.
+    // This resolves the "NOT_FOUND" 404 error seen in v1beta.
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `
             You are an expert entomologist. Analyze the attached image. Is the insect in the image a honeybee (Apis mellifera)?
@@ -42,12 +48,13 @@ export const handler = async (event) => {
 
     const result = await apiResponse.json();
 
-    // If Google returns an error (like a 404 on the model name), we capture it here
     if (!apiResponse.ok) {
       console.error('Google API Error:', result);
       return {
         statusCode: apiResponse.status,
-        body: JSON.stringify({ error: result.error?.message || 'API Error' }),
+        body: JSON.stringify({
+          error: result.error?.message || 'Google API Error',
+        }),
       };
     }
 
@@ -57,7 +64,7 @@ export const handler = async (event) => {
       body: JSON.stringify(result),
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in serverless function:', error);
     return { statusCode: 500, body: 'Internal Server Error' };
   }
 };
