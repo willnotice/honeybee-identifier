@@ -1,4 +1,4 @@
-// This function uses the stable Google AI v1 endpoint to resolve the 404 error.
+// This function uses the v1beta endpoint with the gemini-1.5-flash model name.
 export const handler = async (event) => {
   // Only allow POST requests.
   if (event.httpMethod !== 'POST') {
@@ -17,9 +17,16 @@ export const handler = async (event) => {
       return { statusCode: 500, body: 'API key is not configured.' };
     }
 
-    // FIX: Switched to the stable 'v1' endpoint and 'gemini-1.5-flash' model.
-    // This resolves the "NOT_FOUND" 404 error seen in v1beta.
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Define the model and version.
+    // gemini-1.5-flash is the standard identifier for the vision-capable Flash model.
+    const model = 'gemini-1.5-flash';
+    const apiVersion = 'v1beta';
+    const apiUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey}`;
+
+    // Log the call for debugging (hiding the sensitive key)
+    console.log(
+      `Calling Google API: https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent`
+    );
 
     const prompt = `
             You are an expert entomologist. Analyze the attached image. Is the insect in the image a honeybee (Apis mellifera)?
@@ -49,11 +56,15 @@ export const handler = async (event) => {
     const result = await apiResponse.json();
 
     if (!apiResponse.ok) {
-      console.error('Google API Error:', result);
+      console.error(
+        'Google API Error Detail:',
+        JSON.stringify(result, null, 2)
+      );
       return {
         statusCode: apiResponse.status,
         body: JSON.stringify({
           error: result.error?.message || 'Google API Error',
+          status: result.error?.status,
         }),
       };
     }
