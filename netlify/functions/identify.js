@@ -1,46 +1,40 @@
+// This function uses the Gemini 2.5 Flash model confirmed by your account diagnostics.
 export const handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
   try {
+    const { imageData } = JSON.parse(event.body);
+    if (!imageData) {
+      return { statusCode: 400, body: 'Missing image data' };
+    }
+
     const apiKey = process.env.GEMINI_API_KEY
       ? process.env.GEMINI_API_KEY.trim()
       : null;
-
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'API Key missing in Netlify' }),
-      };
+      console.error('GEMINI_API_KEY is not set.');
+      return { statusCode: 500, body: 'API key is not configured.' };
     }
 
-    // --- DIAGNOSTIC STEP: List available models ---
-    console.log('--- START DIAGNOSTIC ---');
-    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-    const listResponse = await fetch(listUrl);
-    const listData = await listResponse.json();
+    // Use the model name confirmed by your diagnostics
+    const model = 'gemini-2.5-flash';
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    // This will print every model name your key can see into the Netlify logs
-    console.log(
-      'Available Models:',
-      JSON.stringify(listData.models?.map((m) => m.name))
-    );
-    console.log('--- END DIAGNOSTIC ---');
-
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 200,
-        body: 'Diagnostic run complete. Check Netlify logs.',
-      };
-    }
-
-    const { imageData } = JSON.parse(event.body);
-
-    // We'll try 'gemini-1.5-flash' one last time with the most basic v1beta path
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const prompt = `
+            You are an expert entomologist. Analyze the attached image. Is the insect in the image a honeybee (Apis mellifera)?
+            Your response must be structured in HTML.
+            1. Start with an <h3> tag containing a clear, definitive answer: "Yes, this is a Honeybee.", "No, this is not a Honeybee.", or "Uncertain, but it appears to be a...".
+            2. Follow with a <p> tag that provides a 2-4 sentence, easy-to-understand explanation for your conclusion.
+            3. If it is NOT a honeybee, identify the insect if possible (e.g., Wasp, Bumblebee, Hornet) and use another <p> tag to explain the key visual differences from a honeybee.
+        `;
 
     const payload = {
       contents: [
         {
           parts: [
-            { text: 'Is this a honeybee? Answer in HTML.' },
+            { text: prompt },
             { inlineData: { mimeType: 'image/jpeg', data: imageData } },
           ],
         },
@@ -54,13 +48,24 @@ export const handler = async (event) => {
     });
 
     const result = await apiResponse.json();
+
+    if (!apiResponse.ok) {
+      console.error('Google API Error:', result);
+      return {
+        statusCode: apiResponse.status,
+        body: JSON.stringify({
+          error: result.error?.message || 'Google API Error',
+        }),
+      };
+    }
+
     return {
-      statusCode: apiResponse.status,
+      statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(result),
     };
   } catch (error) {
-    console.error('Diagnostic Error:', error);
-    return { statusCode: 500, body: error.message };
+    console.error('Error in serverless function:', error);
+    return { statusCode: 500, body: 'Internal Server Error' };
   }
 };
